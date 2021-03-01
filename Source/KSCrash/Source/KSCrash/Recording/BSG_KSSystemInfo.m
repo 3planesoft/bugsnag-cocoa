@@ -370,17 +370,28 @@
     BSGDictSetSafeObject(sysInfo, [UIDevice currentDevice].systemVersion, @BSG_KSSystemField_SystemVersion);
 #else
     BSGDictSetSafeObject(sysInfo, @"Mac OS", @BSG_KSSystemField_SystemName);
-    NSOperatingSystemVersion version =
-        [NSProcessInfo processInfo].operatingSystemVersion;
+    NSProcessInfo *info = [NSProcessInfo processInfo];
     NSString *systemVersion;
-    if (version.patchVersion == 0) {
-        systemVersion =
-            [NSString stringWithFormat:@"%ld.%ld", version.majorVersion,
-                                       version.minorVersion];
-    } else {
-        systemVersion = [NSString
-            stringWithFormat:@"%ld.%ld.%ld", version.majorVersion,
-                             version.minorVersion, version.patchVersion];
+    if([info respondsToSelector:@selector(operatingSystemVersion)])
+    {
+        NSOperatingSystemVersion version = info.operatingSystemVersion;
+        if (version.patchVersion == 0) {
+            systemVersion =
+                [NSString stringWithFormat:@"%ld.%ld", version.majorVersion,
+                                           version.minorVersion];
+        } else {
+            systemVersion = [NSString
+                stringWithFormat:@"%ld.%ld.%ld", version.majorVersion,
+                                 version.minorVersion, version.patchVersion];
+        }
+    }
+    else
+    {
+        SInt32 majorVersion, minorVersion, patchVersion;
+        Gestalt(gestaltSystemVersionMajor, &majorVersion);
+        Gestalt(gestaltSystemVersionMinor, &minorVersion);
+        Gestalt(gestaltSystemVersionBugFix, &patchVersion);
+        systemVersion = [NSString stringWithFormat:@"%i.%i.%i", majorVersion, minorVersion, patchVersion];
     }
     BSGDictSetSafeObject(sysInfo, systemVersion, @BSG_KSSystemField_SystemVersion);
 #endif
